@@ -1,0 +1,98 @@
+include "test"
+| include "badge"
+|
+
+# -- url --
+
+def test_url_basic():
+  assert_eq(url("build", "passing", "brightgreen"), "https://img.shields.io/badge/build-passing-brightgreen")
+end
+
+def test_url_default_color():
+  assert_eq(url("label", "message"), "https://img.shields.io/badge/label-message-blue")
+end
+
+def test_url_strips_hex_hash():
+  assert_eq(url("label", "message", "#ff69b4"), "https://img.shields.io/badge/label-message-ff69b4")
+end
+
+def test_url_escapes_dashes_underscores_and_spaces():
+  assert_eq(
+    url("build status", "in-progress_now", "blue"),
+    "https://img.shields.io/badge/build_status-in--progress__now-blue"
+  )
+end
+
+def test_url_with_style():
+  assert_eq(
+    url("label", "message", "blue", "flat-square"),
+    "https://img.shields.io/badge/label-message-blue?style=flat-square"
+  )
+end
+
+def test_url_with_style_and_logo():
+  assert_eq(
+    url("label", "message", "blue", "flat-square", "github"),
+    "https://img.shields.io/badge/label-message-blue?style=flat-square&logo=github"
+  )
+end
+
+# -- markdown --
+
+def test_markdown_without_link():
+  assert_eq(
+    markdown("license", "MIT"),
+    "![license: MIT](https://img.shields.io/badge/license-MIT-blue)"
+  )
+end
+
+def test_markdown_with_link():
+  assert_eq(
+    markdown("license", "MIT", "blue", "https://opensource.org/licenses/MIT"),
+    "[![license: MIT](https://img.shields.io/badge/license-MIT-blue)](https://opensource.org/licenses/MIT)"
+  )
+end
+
+# -- status_color --
+
+def test_status_color_passing():
+  assert_eq(status_color("passing"), "brightgreen")
+  | assert_eq(status_color("Success"), "brightgreen")
+  | assert_eq(status_color("OK"), "brightgreen")
+end
+
+def test_status_color_failing():
+  assert_eq(status_color("failing"), "red")
+  | assert_eq(status_color("Error"), "red")
+end
+
+def test_status_color_unknown():
+  assert_eq(status_color("unknown"), "lightgrey")
+end
+
+def test_status_color_other():
+  assert_eq(status_color("pending"), "yellow")
+end
+
+# -- convenience wrappers --
+
+def test_build_badge():
+  assert_eq(
+    build("passing"),
+    "![build: passing](https://img.shields.io/badge/build-passing-brightgreen)"
+  )
+end
+
+def test_license_badge():
+  assert_eq(
+    license("MIT"),
+    "![license: MIT](https://img.shields.io/badge/license-MIT-blue)"
+  )
+end
+
+def test_version_badge():
+  assert_eq(
+    version("1.2.3"),
+    "![version: 1.2.3](https://img.shields.io/badge/version-1.2.3-blue)"
+  )
+end

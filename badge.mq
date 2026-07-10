@@ -1,0 +1,71 @@
+# shields.io badge generator for mq — build badge URLs and ready-to-paste
+# Markdown image tags for READMEs, without leaving your mq pipeline.
+# https://github.com/harehare/badge.mq
+
+def _badge_escape(s):
+  let s1 = replace(to_string(s), "-", "--")
+  | let s2 = replace(s1, "_", "__")
+  | replace(s2, " ", "_")
+end
+
+def _badge_color(c):
+  ltrimstr(to_string(c), "#")
+end
+
+def _badge_query(style, logo):
+  let params = filter(
+    [
+      if (is_none(style)): None else: "style=" + style,
+      if (is_none(logo)): None else: "logo=" + logo,
+    ],
+    fn(p): !is_none(p);
+  )
+  | if (is_empty(params)): "" else: "?" + join(params, "&")
+end
+
+# Builds a shields.io static badge URL: `https://img.shields.io/badge/{label}-{message}-{color}`.
+# `color` may be a named color ("blue", "brightgreen", …) or a hex code (with or without "#").
+# `style` is one of shields.io's badge styles ("flat", "flat-square", "plastic", "for-the-badge", "social").
+def url(label, message, color = "blue", style = None, logo = None):
+  "https://img.shields.io/badge/"
+    + _badge_escape(label) + "-" + _badge_escape(message) + "-" + _badge_color(color)
+    + _badge_query(style, logo)
+end
+
+# Builds a Markdown image tag for a badge: `![label: message](url)`.
+# If `link` is given, wraps it so the badge is clickable: `[![label: message](url)](link)`.
+def markdown(label, message, color = "blue", link = None, style = None, logo = None):
+  let badge_url = url(label, message, color, style, logo)
+  | let alt = "![" + label + ": " + message + "](" + badge_url + ")"
+  | if (is_none(link)): alt else: "[" + alt + "](" + link + ")"
+end
+
+# Maps a common CI/status word to a shields.io color
+# ("passing"/"success"/"ok" -> brightgreen, "failing"/"error"/"fail" -> red,
+# "unknown" -> lightgrey, anything else -> yellow).
+def status_color(status):
+  let s = downcase(to_string(status))
+  | if (s == "passing" || s == "success" || s == "ok"):
+      "brightgreen"
+    elif (s == "failing" || s == "error" || s == "fail"):
+      "red"
+    elif (s == "unknown"):
+      "lightgrey"
+    else:
+      "yellow"
+end
+
+# Convenience: a build-status badge with color derived from `status_color`.
+def build(status, style = None):
+  markdown("build", status, status_color(status), None, style)
+end
+
+# Convenience: a license badge (label fixed to "license").
+def license(name, color = "blue", style = None):
+  markdown("license", name, color, None, style)
+end
+
+# Convenience: a version badge (label fixed to "version").
+def version(v, color = "blue", style = None):
+  markdown("version", v, color, None, style)
+end
